@@ -8,31 +8,8 @@ import (
 	"event_management/qr" // Import the qr package
 )
 
-func GenerateQRHandler(w http.ResponseWriter, r *http.Request) {
-	// Handle HTTP request to generate QR code for attendee
-	// Example usage of db and qr packages
-	qrData := "attendee_id_or_unique_code_here"
-	qrBytes, err := qr.GenerateQRCode(qrData)
-	if err != nil {
-		http.Error(w, "Failed to generate QR code", http.StatusInternalServerError)
-		return
-	}
-
-	// Optionally, save QR code to file
-	filename := fmt.Sprintf("%s.png", qrData)
-	err = qr.SaveQRCodeToFile(qrData, filename)
-	if err != nil {
-		http.Error(w, "Failed to save QR code to file", http.StatusInternalServerError)
-		return
-	}
-
-	// Return success response or render HTML with QR code
-	fmt.Fprintf(w, "QR code generated successfully and saved as %s", filename)
-}
-
 func ScanQRHandler(w http.ResponseWriter, r *http.Request) {
 	// Handle HTTP request to scan QR code and verify attendee
-	// Example: Use db package to verify attendee against database
 	qrData := r.FormValue("qr_code")
 
 	isValidAttendee := db.VerifyAttendee(qrData)
@@ -41,4 +18,40 @@ func ScanQRHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		fmt.Fprintf(w, "Invalid attendee")
 	}
+}
+
+func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse form data
+	name := r.FormValue("name")
+	email := r.FormValue("email")
+	roll := r.FormValue("roll")
+
+	// Store attendee data in the database
+	attendeeID, err := db.InsertAttendee(name, email, roll)
+	if err != nil {
+		http.Error(w, "Failed to register attendee", http.StatusInternalServerError)
+		return
+	}
+
+	// Generate QR code for the attendee
+	qrData := fmt.Sprintf("attendee_%d", attendeeID)
+	err = qr.SaveQRCodeToFile(qrData, fmt.Sprintf("static/qr_%d.png", attendeeID))
+	if err != nil {
+		http.Error(w, "Failed to generate QR code", http.StatusInternalServerError)
+		return
+	}
+
+	// Saving qrData into the database
+	err = db.SaveQRData(attendeeID, qrData)
+	if err != nil {
+		http.Error(w, "Failed to save QR data", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "Registration successful! QR code generated.")
 }
