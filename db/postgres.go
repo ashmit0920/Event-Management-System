@@ -13,7 +13,7 @@ const (
 	port     = 5432
 	user     = "ashmit"
 	password = "ashmit0920"
-	dbname   = "your-db"
+	dbname   = "event"
 )
 
 var db *sql.DB
