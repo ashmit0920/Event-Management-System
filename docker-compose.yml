@@ -1,11 +1,22 @@
 services:
+  go-app:
+    container_name: go-app
+    image: AshIsPro/go-app:1.0.0
+    build: .
+    environment:
+      DATABASE_URL: "postgres://ashmit:ashmit0920@postgres:5432/event?sslmode=disable"
+    ports:
+    - "8080:8080"
+    depends_on:
+      - postgres
+
   postgres:
     image: postgres:latest
     container_name: postgres
     restart: always
     environment:
       POSTGRES_USER: ashmit
-      POSTGRES_PASSWORD: ashmit0920
+      POSTGRES_PASSWORD: test123
       POSTGRES_DB: event
     ports:
       - "5432:5432"
