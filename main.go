@@ -2,10 +2,13 @@ package main
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 
 	"event_management/db"       // Import the db package
 	"event_management/handlers" // Import the handlers package
+
+	"github.com/joho/godotenv"
 )
 
 var (
@@ -15,6 +18,10 @@ var (
 )
 
 func main() {
+
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	db.ConnectDB()
 	defer db.CloseDB()
